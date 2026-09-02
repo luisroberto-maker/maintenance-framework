@@ -1,0 +1,29 @@
+Copyright (c) 2026 VecTech. Todos los derechos reservados.
+
+Este software y su documentación asociada (el "Software") son propiedad
+de VecTech. Queda prohibido copiar, modificar, fusionar, publicar,
+distribuir, sublicenciar y/o vender copias del Software, en su totalidad
+o en parte, sin el permiso previo y por escrito de VecTech.
+
+El acceso a este repositorio (por ejemplo, como colaborador invitado) no
+constituye, por sí mismo, una concesión de ninguno de los derechos
+anteriores. El uso autorizado se limita a las actividades explícitamente
+aprobadas por VecTech para cada persona con acceso.
+
+EL SOFTWARE SE PROPORCIONA "TAL CUAL", SIN GARANTÍA DE NINGÚN TIPO,
+EXPRESA O IMPLÍCITA, INCLUYENDO PERO NO LIMITÁNDOSE A GARANTÍAS DE
+COMERCIALIZACIÓN, IDONEIDAD PARA UN PROPÓSITO PARTICULAR Y NO
+INFRACCIÓN. EN NINGÚN CASO LOS AUTORES O TITULARES DE LOS DERECHOS DE
+AUTOR SERÁN RESPONSABLES DE NINGUNA RECLAMACIÓN, DAÑO U OTRA
+RESPONSABILIDAD, YA SEA EN UNA ACCIÓN DE CONTRATO, AGRAVIO O CUALQUIER
+OTRO MOTIVO, DERIVADA DE, FUERA DE O EN CONEXIÓN CON EL SOFTWARE O EL
+USO U OTRO TIPO DE ACCIONES EN EL SOFTWARE.
+
+---
+
+Nota sobre componentes derivados: el módulo core/legacy_plc_predictor.py
+replica deliberadamente la lógica de un repositorio previo del mismo
+autor (luisroberto-maker/PLC-failure-prediction-pipeline), para mantener
+compatibilidad con modelos .pkl ya entrenados con ese repositorio. Si ese
+repositorio tiene una licencia pública declarada distinta a esta, conviene
+homologarlas o documentar explícitamente por qué difieren.

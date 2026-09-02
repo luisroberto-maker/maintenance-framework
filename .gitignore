@@ -1,0 +1,36 @@
+# Entornos virtuales
+venv/
+plc/
+env/
+.venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Pruebas
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Salidas del sistema (modelos entrenados, reportes) — NO deben versionarse,
+# se generan localmente y pueden contener datos de clientes
+output/
+*.pkl
+*.joblib
+
+# Datos (nunca subir datos reales de clientes al repositorio)
+*.xlsx
+*.xls
+*.csv
+!tests/**/*.csv
+
+# Sistema operativo / editor
+.DS_Store
+.vscode/
+.idea/
+*.swp

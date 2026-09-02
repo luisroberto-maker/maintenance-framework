@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8">
+<title>Predicción de desgaste de herramienta — señales de sensor — phm2010_demo</title>
+<style>
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+       color: #1a1a2e; background: #f4f6f9; font-size: 14px; line-height: 1.6; }
+.page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+         color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px; }
+header h1 { font-size: 22px; font-weight: 600; }
+header p  { opacity: 0.75; font-size: 13px; margin-top: 4px; }
+.badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.card { background: white; border-radius: 10px; padding: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 20px; }
+.card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px;
+           padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; color: #111827; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f9fafb; text-align: left; padding: 8px 12px; font-weight: 600;
+     color: #374151; border-bottom: 2px solid #e5e7eb; }
+td { padding: 7px 12px; border-bottom: 1px solid #f3f4f6; color: #111827; }
+tr:hover td { background: #f9fafb; }
+.warn-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px;
+            border-radius: 0 8px 8px 0; margin-bottom: 10px; font-size: 13px; color: #92400e; }
+.section { margin-bottom: 24px; }
+footer { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 32px; }
+
+</style></head>
+<body><div class="page">
+  <header>
+    <h1>Predicción de desgaste de herramienta — señales de sensor</h1>
+    <p>Cliente: <strong>phm2010_demo</strong> &nbsp;·&nbsp; Generado: <strong>20/07/2026 00:47</strong></p>
+  </header>
+
+  <div class="section card">
+    <h2>Métricas del modelo</h2>
+    <div style='font-size:13px;line-height:1.8'><div><strong>rf</strong>: rmse=0.011630738414496031, mae=0.009238452043419675, r2=0.9483153402965794</div><div><strong>best_model</strong>: rf</div><div><strong>n_train</strong>: 300</div><div><strong>n_test</strong>: 150</div><div><strong>vb_range_train</strong>: [0.0001617017422608731, 0.19469149767211127]</div><div><strong>vb_range_test</strong>: [0.001343561872646218, 0.1858720331174655]</div></div>
+  </div>
+
+  <div class="section card">
+    <h2>Resultados — Herramienta / experimento</h2>
+    <table>
+      <thead><tr>
+        <th>#</th><th>Herramienta / experimento</th><th>N.º de pasada</th>
+        <th>Desgaste estimado VB (mm)</th><th>Estado</th>
+        <th>Confianza</th><th>Vida útil restante (pasadas)</th><th>Modelo usado</th><th>Incertidumbre</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>1</td><td><strong>c1</strong></td><td>148</td>
+          <td>0.18061</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>8</td><td>RF_ONLY</td><td>0.01507</td>
+        </tr>
+        <tr>
+          <td>2</td><td><strong>c1</strong></td><td>150</td>
+          <td>0.17981</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>25</td><td>RF_ONLY</td><td>0.01825</td>
+        </tr>
+        <tr>
+          <td>3</td><td><strong>c1</strong></td><td>147</td>
+          <td>0.17966</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>10</td><td>RF_ONLY</td><td>0.01486</td>
+        </tr>
+        <tr>
+          <td>4</td><td><strong>c1</strong></td><td>146</td>
+          <td>0.17925</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>9</td><td>RF_ONLY</td><td>0.01481</td>
+        </tr>
+        <tr>
+          <td>5</td><td><strong>c1</strong></td><td>149</td>
+          <td>0.1783</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>20</td><td>RF_ONLY</td><td>0.01896</td>
+        </tr>
+        <tr>
+          <td>6</td><td><strong>c1</strong></td><td>145</td>
+          <td>0.17591</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>12</td><td>RF_ONLY</td><td>0.01487</td>
+        </tr>
+        <tr>
+          <td>7</td><td><strong>c1</strong></td><td>144</td>
+          <td>0.17313</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>18</td><td>RF_ONLY</td><td>0.01677</td>
+        </tr>
+        <tr>
+          <td>8</td><td><strong>c1</strong></td><td>142</td>
+          <td>0.16974</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>31</td><td>RF_ONLY</td><td>0.01669</td>
+        </tr>
+        <tr>
+          <td>9</td><td><strong>c1</strong></td><td>143</td>
+          <td>0.16934</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>97</td><td>RF_ONLY</td><td>0.01814</td>
+        </tr>
+        <tr>
+          <td>10</td><td><strong>c1</strong></td><td>141</td>
+          <td>0.16802</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>23</td><td>RF_ONLY</td><td>0.01514</td>
+        </tr>
+        <tr>
+          <td>11</td><td><strong>c1</strong></td><td>138</td>
+          <td>0.16777</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>21</td><td>RF_ONLY</td><td>0.01477</td>
+        </tr>
+        <tr>
+          <td>12</td><td><strong>c1</strong></td><td>140</td>
+          <td>0.16604</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>26</td><td>RF_ONLY</td><td>0.01527</td>
+        </tr>
+        <tr>
+          <td>13</td><td><strong>c6</strong></td><td>147</td>
+          <td>0.16586</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>10</td><td>RF_ONLY</td><td>0.01891</td>
+        </tr>
+        <tr>
+          <td>14</td><td><strong>c1</strong></td><td>139</td>
+          <td>0.16577</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>38</td><td>RF_ONLY</td><td>0.0166</td>
+        </tr>
+        <tr>
+          <td>15</td><td><strong>c6</strong></td><td>148</td>
+          <td>0.16507</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>22</td><td>RF_ONLY</td><td>0.01761</td>
+        </tr>
+        <tr>
+          <td>16</td><td><strong>c1</strong></td><td>137</td>
+          <td>0.16495</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>38</td><td>RF_ONLY</td><td>0.01473</td>
+        </tr>
+        <tr>
+          <td>17</td><td><strong>c4</strong></td><td>150</td>
+          <td>0.16264</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>16</td><td>RF_ONLY</td><td>0.01482</td>
+        </tr>
+        <tr>
+          <td>18</td><td><strong>c4</strong></td><td>149</td>
+          <td>0.16196</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>17</td><td>RF_ONLY</td><td>0.01292</td>
+        </tr>
+        <tr>
+          <td>19</td><td><strong>c6</strong></td><td>149</td>
+          <td>0.16154</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>MEDIO</td><td>31</td><td>RF_ONLY</td><td>0.02272</td>
+        </tr>
+        <tr>
+          <td>20</td><td><strong>c6</strong></td><td>150</td>
+          <td>0.16152</td>
+          <td><span class="badge" style="background:#d9770620;color:#d97706">🟡 ALERTA</span></td>
+          <td>ALTO</td><td>54</td><td>RF_ONLY</td><td>0.0176</td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  
+  <div class="section card">
+    <h2>Importancia de Variables (Top 10)</h2>
+    <table>
+      <thead><tr><th>Variable</th><th>Importancia relativa</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-family:monospace">vy_p10k</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:100%"></div>
+              </div>
+              <span>0.0462</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">ae_crest</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:87%"></div>
+              </div>
+              <span>0.0403</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">ae_mean</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:84%"></div>
+              </div>
+              <span>0.0389</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">fx_p2p</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:69%"></div>
+              </div>
+              <span>0.0323</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">fz_zpf1x</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:54%"></div>
+              </div>
+              <span>0.0252</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">vy_p5k_10k</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:46%"></div>
+              </div>
+              <span>0.0213</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">fx_mean</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:44%"></div>
+              </div>
+              <span>0.0207</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">vz_rms</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:43%"></div>
+              </div>
+              <span>0.0199</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">vx_kurtosis</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:41%"></div>
+              </div>
+              <span>0.0194</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">ae_p2k_5k</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:40%"></div>
+              </div>
+              <span>0.0185</span>
+            </div>
+          </td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <div class="section card">
+    <h2>Advertencias</h2>
+    <div class="warn-box">⚠ Rango de desgaste (VB): 0.0002–0.1947 mm. 0 pasadas superan el umbral de falla (0.2 mm).</div>
+  </div>
+
+  <footer><p>Generado por el framework multi-vertical de predicción — VecTech</p></footer>
+</div></body></html>

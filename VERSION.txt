@@ -1,0 +1,106 @@
+v2.6 — 2026-08-12
+
+Nuevo: LICENSE — VecTech, propietario, todos los derechos reservados.
+pyproject.toml ahora referencia este archivo directamente
+(license = { file = "LICENSE" }) en vez de un texto genérico de
+marcador de posición. Verificado que setuptools lo embebe correctamente
+en los metadatos del paquete al instalar (License-File: LICENSE).
+
+Nota pendiente de revisión por el usuario (no bloqueante): 
+core/legacy_plc_predictor.py replica la logica de un repositorio previo
+del mismo autor. Si ese repositorio tiene una licencia publica distinta
+declarada en GitHub, conviene homologarlas o documentar la diferencia.
+
+v2.5 — 2026-08-12
+
+Nuevo: ARCHITECTURE.md — documento de arquitectura para quien va a
+extender o mantener el código (no solo usarlo). Cubre: el patrón de 4
+agentes, la interfaz BasePredictor, por qué LegacyPLCPredictor no tiene
+Agente 2 (excepción documentada, no descuido), el contrato de API
+pública (qué es seguro consumir desde una interfaz externa vs qué es
+implementación interna), el modelo de confianza y por qué importa
+cruzarlo con N_EVENTOS al leer un reporte, limitaciones conocidas que
+son deliberadas (no bugs pendientes), y una guía paso a paso para
+agregar una vertical nueva siguiendo el mismo patrón. Incluye 3
+diagramas Mermaid, verificados sintácticamente con la librería mermaid
+real antes de entregarse.
+
+v2.4 — 2026-08-12
+
+Nuevo: comparar_legacy_vs_framework.py — script para diagnosticar si un
+patrón de "muchos componentes en ALTO con confianza BAJA" en el modelo
+legado viene de sus limitaciones conocidas (LabelEncoder y PCA
+reajustados en cada corrida) o es una señal real. Entrena un
+AdaptiveFailurePredictor nuevo con el mismo Excel y compara ambos
+resultados lado a lado. Es otra plantilla editable (como
+probar_modelo_real.py y probar_modelo_kaggle.py) — excluida de
+CHECKSUMS.txt por el mismo motivo.
+
+v2.3 — 2026-08-12
+
+FIX: pyproject.toml exigía Python >=3.11, lo que bloqueaba por completo
+`pip install -e .` en Python 3.9.6 (el entorno real donde ya se había
+confirmado que las 74 pruebas pasan). Se relajó a >=3.9 — la
+recomendación de actualizar a 3.11/3.12 sigue en pie (ver README), pero
+ya no es un bloqueo técnico, solo una sugerencia. Se verificó que el
+código no usa ninguna sintaxis exclusiva de Python 3.10+ que
+justificara el límite anterior.
+
+v2.2 — 2026-08-12
+
+AJUSTE (sin cambios funcionales): probar_modelo_real.py y
+probar_modelo_kaggle.py se EXCLUYERON de CHECKSUMS.txt. Son plantillas
+pensadas para que las edites con tus propias rutas (RUTA_EXCEL,
+RUTA_MODELO, CARPETA_ARTEFACTOS_KAGGLE, etc.) — si ya las personalizaste,
+es normal y correcto que ya no coincidan con la copia original. Antes
+esto generaba una falsa alarma de "archivo corrupto" al verificar
+CHECKSUMS.txt. Ambos archivos ahora incluyen una nota explicando esto.
+
+v2.1 — 2026-08-12
+
+Incluye (acumulado de versiones anteriores):
+- Fix: KeyError en AdaptiveFailurePredictor.fit() (df_train vs df_train_model)
+- Fix: compatibilidad pandas 3.0 en groupby().apply() (3 ocurrencias)
+- Fix: SafeEncoder con columnas de texto respaldadas por Arrow (pandas 3.0)
+- Fix: manejo robusto de fallos al importar xgboost en macOS (libomp)
+- Fix: wear.csv ahora es OPCIONAL en ingesta de señal cruda (inferencia pura)
+- Fix: RUL_ESTIMADO ya no produce valores absurdos con historial insuficiente
+- Nuevo: suite de pruebas automatizadas con pytest (carpeta tests/)
+- Nuevo: requirements-lock.txt — versiones exactas ancladas a un entorno probado
+- Nuevo: límites superiores en requirements.txt (evitar rupturas tipo pandas 3.0)
+- Nuevo: unificación del patrón de 4 agentes entre verticales PLC/desgaste
+- Nuevo: pyproject.toml — instalable con `pip install -e .`, comando `plc-agent`
+- Nuevo: .gitignore + .github/workflows/tests.yml (CI automático)
+- Nuevo: logging consistente — reemplazados los ~130 print() por logging estándar
+- Nuevo: VALIDACIÓN DE CONFIGURACIÓN CON PYDANTIC:
+  -> core/config.py — AgentConfig ahora es un pydantic.BaseModel en vez
+     de un @dataclass simple. Un valor inválido (umbral_critico=-5,
+     split_ratio=1.5, n_pca_components=0, idioma_reporte="fr", etc.)
+     falla AL CONSTRUIR el objeto, con un mensaje que identifica el
+     campo, el valor recibido y por qué está mal — no minutos después,
+     a mitad del entrenamiento.
+  -> extra="forbid": un typo en el nombre de un parámetro
+     (umbral_critco en vez de umbral_critico) también falla, en vez de
+     ignorarse en silencio.
+  -> El CLI (plc-agent / orchestrator.py main()) captura estos errores
+     y los muestra limpios, sin traceback, con código de salida 1.
+  -> Todas las restricciones de validación están justificadas por cómo
+     se usa cada campo en el código real (ver comentarios en
+     core/config.py) — no son límites arbitrarios.
+  -> tests/test_config_validation.py — 30 pruebas nuevas dedicadas
+  -> Migración 100% compatible hacia atrás: se auditaron todos los
+     puntos de construcción de AgentConfig en el proyecto antes de
+     migrar; ninguno mutaba atributos después de construir ni usaba
+     funciones específicas de dataclasses — cero cambios necesarios
+     en el código que ya usa AgentConfig(...)
+
+Nota sobre Python: se recomienda Python 3.11 o 3.12. Python 3.9 llegó a
+su fin de vida (sin parches de seguridad) el 31 de octubre de 2025.
+
+Para verificar ESTA entrega específica:
+    cat VERSION.txt
+    shasum -a 256 -c CHECKSUMS.txt
+
+Para correr las pruebas automatizadas (ahora 74):
+    pip install -e ".[dev]"
+    python -m pytest

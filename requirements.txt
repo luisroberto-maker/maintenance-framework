@@ -1,0 +1,33 @@
+# requirements.txt — rangos flexibles para instalación normal.
+#
+# ¿Quieres reproducir exactamente el entorno ya probado (40/40 pruebas
+# pasando)? Usa requirements-lock.txt en su lugar:
+#     pip install -r requirements-lock.txt
+#
+# Este archivo (requirements.txt) es para instalaciones nuevas donde no
+# importa la versión exacta, solo que sea compatible.
+
+# Núcleo — requerido para ambas verticales (PLC y desgaste de herramienta)
+# Límite superior en pandas: se probó y corrigió compatibilidad con
+# pandas 3.0 (ver tests/test_predictor_plc.py), pero se fija <4.0 como
+# límite de seguridad general ante cambios mayores futuros no probados.
+pandas>=2.0,<4.0
+numpy>=1.24,<3.0
+scikit-learn>=1.3,<2.0
+scipy>=1.10,<2.0
+pydantic>=2.0,<3.0
+joblib>=1.3,<2.0
+openpyxl>=3.1,<4.0
+
+# Vertical PLC — embeddings semánticos de logs
+sentence-transformers>=2.6,<6.0
+
+# Vertical desgaste de herramienta — modelo de boosting (opcional pero recomendado)
+xgboost>=2.0,<3.0
+
+# Fuentes de datos opcionales
+sqlalchemy>=2.0,<3.0        # solo si vas a conectar a bases de datos SQL
+pyarrow>=14.0,<22.0           # solo si vas a leer/escribir archivos .parquet
+
+# Pruebas automatizadas
+pytest>=7.4,<9.0

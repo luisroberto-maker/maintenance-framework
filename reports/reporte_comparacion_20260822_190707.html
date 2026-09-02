@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte de Predicción de Fallas — comparacion</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #1a1a2e; background: #f4f6f9; font-size: 14px; line-height: 1.6; }
+    .page { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+              color: white; padding: 28px 32px; border-radius: 12px; margin-bottom: 24px; }
+    header h1 { font-size: 22px; font-weight: 600; }
+    header p  { opacity: 0.75; font-size: 13px; margin-top: 4px; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px;
+              font-size: 12px; font-weight: 600; }
+    .badge-green  { background: #d1fae5; color: #065f46; }
+    .badge-yellow { background: #fef3c7; color: #92400e; }
+    .badge-red    { background: #fee2e2; color: #991b1b; }
+    .badge-blue   { background: #dbeafe; color: #1e40af; }
+    .badge-gray   { background: #f3f4f6; color: #374151; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;
+               margin-bottom: 24px; }
+    .card { background: white; border-radius: 10px; padding: 20px;
+             box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .card h2 { font-size: 15px; font-weight: 600; margin-bottom: 14px;
+                padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; color: #111827; }
+    .metric-val { font-size: 32px; font-weight: 700; color: #1a1a2e; }
+    .metric-lbl { font-size: 12px; color: #6b7280; margin-top: 2px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #f9fafb; text-align: left; padding: 8px 12px;
+          font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb; }
+    td { padding: 7px 12px; border-bottom: 1px solid #f3f4f6; color: #111827; }
+    tr:hover td { background: #f9fafb; }
+    .warn-box { background: #fffbeb; border-left: 4px solid #f59e0b;
+                 padding: 12px 16px; border-radius: 0 8px 8px 0;
+                 margin-bottom: 10px; font-size: 13px; color: #92400e; }
+    .info-box { background: #eff6ff; border-left: 4px solid #3b82f6;
+                 padding: 12px 16px; border-radius: 0 8px 8px 0;
+                 margin-bottom: 10px; font-size: 13px; color: #1e40af; }
+    .section { margin-bottom: 24px; }
+    footer { text-align: center; color: #9ca3af; font-size: 12px; margin-top: 32px; }
+    .progress { background: #e5e7eb; border-radius: 4px; height: 8px; overflow: hidden; }
+    .progress-bar { height: 100%; border-radius: 4px; background: #3b82f6; }
+    @media print {
+      body { background: white; }
+      .page { padding: 0; }
+      header { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Reporte de Predicción de Fallas en Componentes PLC</h1>
+    <p>Cliente: <strong>comparacion</strong> &nbsp;·&nbsp;
+       Generado: <strong>22/08/2026 19:07</strong> &nbsp;·&nbsp;
+       Horizonte de predicción: <strong>7 días</strong>
+    </p>
+  </header>
+
+  <!-- RESUMEN EJECUTIVO -->
+  <div class="grid-3">
+    
+    <div class="card">
+      <h2>Componentes por Nivel de Riesgo</h2>
+      <div style="display:flex;gap:16px;align-items:center;margin-top:8px">
+        <div><div class="metric-val" style="color:#dc2626">1</div>
+             <div class="metric-lbl">🔴 Alto riesgo</div></div>
+        <div><div class="metric-val" style="color:#d97706">8</div>
+             <div class="metric-lbl">🟡 Riesgo medio</div></div>
+        <div><div class="metric-val" style="color:#059669">6</div>
+             <div class="metric-lbl">🟢 Bajo riesgo</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Métricas del Modelo</h2>
+      <div class="metric-val">0.3455 <span class="badge badge-red">Bajo</span></div>
+      <div class="metric-lbl">AUC-ROC en test</div>
+      <div style="margin-top:8px">
+        <div class="metric-lbl">AUC-PR: <strong>0.6172</strong></div>
+        <div class="metric-lbl">Eventos en test: <strong>120</strong></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Resumen del Análisis</h2>
+      <div style="font-size:13px;color:#374151;line-height:1.8">
+        <div>Estrategia: <strong>HYBRID</strong></div>
+        <div>Componentes analizados: <strong>15</strong></div>
+        <div>Tiempo de ejecución: <strong>11.3s</strong></div>
+        <div>Umbral crítico: <strong>30 min</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RANKING DE RIESGO -->
+  <div class="section card">
+    <h2>Ranking de Riesgo — Top 20 componentes</h2>
+    
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Componente</th><th>Panel</th>
+          <th>Prob. Falla</th><th>Nivel Riesgo</th>
+          <th>Incertidumbre</th><th>Confianza</th>
+          <th>Modelo</th><th>N Eventos</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>GMF3E4</strong></td>
+          <td>L1</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:67%;
+                  background:#dc2626">
+                </div>
+              </div>
+              <span>0.678</span>
+            </div>
+          </td>
+          <td><span class="badge badge-red">🔴 ALTO</span></td>
+          <td>0.373</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-gray">GLOBAL</span></td>
+          <td>43</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>GMF3D9</strong></td>
+          <td>L1</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:59%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.600</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.388</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-gray">GLOBAL</span></td>
+          <td>54</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>GMF38E</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:46%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.466</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.338</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>32</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>GMF3B7</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:45%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.452</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.407</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>34</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>GMF3CF</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:44%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.447</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.377</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-gray">GLOBAL</span></td>
+          <td>34</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>GMF368</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:39%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.397</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.392</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>46</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>GMF339</strong></td>
+          <td>L1</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:39%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.395</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.341</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>39</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><strong>GMF387</strong></td>
+          <td>L1</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:38%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.390</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.357</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>47</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>GMF363</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:32%;
+                  background:#d97706">
+                </div>
+              </div>
+              <span>0.325</span>
+            </div>
+          </td>
+          <td><span class="badge badge-yellow">🟡 MEDIO</span></td>
+          <td>0.339</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>43</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>GMF34A</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:28%;
+                  background:#059669">
+                </div>
+              </div>
+              <span>0.286</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">🟢 BAJO</span></td>
+          <td>0.356</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>45</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td><strong>GMF379</strong></td>
+          <td>L1</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:26%;
+                  background:#059669">
+                </div>
+              </div>
+              <span>0.266</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">🟢 BAJO</span></td>
+          <td>0.318</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>34</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td><strong>GMF3A8</strong></td>
+          <td>L1</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:26%;
+                  background:#059669">
+                </div>
+              </div>
+              <span>0.261</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">🟢 BAJO</span></td>
+          <td>0.315</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>36</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td><strong>GMF337</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:25%;
+                  background:#059669">
+                </div>
+              </div>
+              <span>0.253</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">🟢 BAJO</span></td>
+          <td>0.291</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>32</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td><strong>GMF3AE</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:20%;
+                  background:#059669">
+                </div>
+              </div>
+              <span>0.205</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">🟢 BAJO</span></td>
+          <td>0.296</td>
+          <td><span class="badge badge-gray">BAJO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>38</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td><strong>GMF37C</strong></td>
+          <td>L2</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:80px">
+                <div class="progress-bar" style="width:10%;
+                  background:#059669">
+                </div>
+              </div>
+              <span>0.109</span>
+            </div>
+          </td>
+          <td><span class="badge badge-green">🟢 BAJO</span></td>
+          <td>0.211</td>
+          <td><span class="badge badge-yellow">MEDIO</span></td>
+          <td><span class="badge badge-blue">LOCAL</span></td>
+          <td>43</td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <!-- MÉTRICAS POR PANEL -->
+  
+  <div class="section card">
+    <h2>Análisis por Panel / Línea</h2>
+    <table>
+      <thead>
+        <tr><th>Panel</th><th>Componentes</th>
+            <th>Prob. Media Falla</th><th>En Alto Riesgo</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>L1</strong></td>
+          <td>6</td>
+          <td>0.432</td>
+          <td><span class="badge badge-red">1</span></td>
+        </tr>
+        <tr>
+          <td><strong>L2</strong></td>
+          <td>9</td>
+          <td>0.327</td>
+          <td><span class="badge badge-green">0</span></td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <!-- IMPORTANCIA DE FEATURES -->
+  
+  <div class="section card">
+    <h2>Importancia de Variables (Top 10)</h2>
+    <table>
+      <thead><tr><th>Variable</th><th>Importancia relativa</th></tr></thead>
+      <tbody>
+        <tr>
+          <td style="font-family:monospace">min_duracion_5_previas</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:100%"></div>
+              </div>
+              <span>0.0992</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">n_falla_componente</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:91%"></div>
+              </div>
+              <span>0.0906</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">max_duracion_5_previas</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:77%"></div>
+              </div>
+              <span>0.0772</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">tiempo_desde_ultima_falla</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:77%"></div>
+              </div>
+              <span>0.0769</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">mediana_tiempo_entre_fallas</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:77%"></div>
+              </div>
+              <span>0.0765</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">tendencia_duracion</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:74%"></div>
+              </div>
+              <span>0.0739</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">media_duracion_3_previas</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:73%"></div>
+              </div>
+              <span>0.0733</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">ratio_reciente_historico</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:71%"></div>
+              </div>
+              <span>0.0713</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">aceleracion_fallas</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:64%"></div>
+              </div>
+              <span>0.0644</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td style="font-family:monospace">proporcion_criticas_previas</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="progress" style="width:120px">
+                <div class="progress-bar" style="width:50%"></div>
+              </div>
+              <span>0.0498</span>
+            </div>
+          </td>
+        </tr></tbody>
+    </table>
+  </div>
+
+  <!-- ADVERTENCIAS Y RECOMENDACIONES -->
+  
+  <div class="section card">
+    <h2>Recomendaciones</h2>
+    <div class="info-box">💡 Programar inspección preventiva en los próximos 7 días para: <strong>GMF3E4</strong></div><div class="info-box">💡 14 componentes tienen predicciones de baja confianza (datos insuficientes). Aumentar el registro histórico mejorará la precisión.</div><div class="info-box">💡 El AUC-ROC (0.345) es bajo. Considerar: aumentar el dataset, revisar el umbral_critico, o añadir más variables de contexto.</div>
+  </div>
+
+  <!-- FICHA TÉCNICA -->
+  <div class="section card">
+    <h2>Ficha Técnica del Sistema</h2>
+    
+    <table>
+      <tbody>
+        <tr><td><strong>Calidad de datos</strong></td>
+            <td>MODERATE</td></tr>
+        <tr><td><strong>Estrategia de modelo</strong></td>
+            <td>HYBRID</td></tr>
+        <tr><td><strong>Total de eventos</strong></td>
+            <td>600</td></tr>
+        <tr><td><strong>Rango temporal</strong></td>
+            <td>74 días</td></tr>
+        <tr><td><strong>Componentes únicos</strong></td>
+            <td>15</td></tr>
+        <tr><td><strong>Componentes con modelo local</strong></td>
+            <td>15</td></tr>
+        <tr><td><strong>Umbral crítico usado</strong></td>
+            <td>20 min</td></tr>
+        <tr><td><strong>Ventana de predicción</strong></td>
+            <td>7 días</td></tr>
+        <tr><td><strong>N eventos por componente</strong></td>
+            <td>10</td></tr>
+        <tr><td><strong>Embeddings de texto</strong></td>
+            <td>Activados</td></tr>
+        <tr><td><strong>Mapeo de columnas detectado</strong></td>
+            <td>START TIME←START TIME |
+                ADDRESS←ADDRESS |
+                FAIL COMMENT←FAIL COMMENT |
+                PANEL←PANEL</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    <p>Generado por el Agente de Predicción de Fallas PLC &nbsp;|&nbsp;
+       Para uso interno del equipo de mantenimiento.</p>
+  </footer>
+
+</div>
+</body>
+</html>

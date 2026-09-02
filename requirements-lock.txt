@@ -1,0 +1,70 @@
+# requirements-lock.txt
+#
+# Versiones EXACTAS, capturadas con `pip freeze` desde un entorno donde
+# las 40 pruebas automatizadas (python -m pytest) pasaron correctamente.
+#
+# Entorno de origen:
+#   - Python 3.9.6 (macOS)
+#   - Fecha de captura: julio 2026
+#
+# Usa este archivo cuando quieras reproducir EXACTAMENTE ese entorno
+# probado, sin sorpresas de una librería que actualizó su comportamiento:
+#
+#   pip install -r requirements-lock.txt
+#
+# Para una instalación normal con rangos flexibles, usa requirements.txt
+# en su lugar. Este archivo incluye TODAS las dependencias, directas e
+# indirectas (transitivas) — así es como debe verse un lock file real.
+
+certifi==2026.7.22
+charset-normalizer==3.4.9
+et_xmlfile==2.0.0
+exceptiongroup==1.3.1
+filelock==3.19.1
+fsspec==2025.10.0
+hf-xet==1.5.2
+huggingface_hub==0.36.2
+idna==3.18
+iniconfig==2.1.0
+Jinja2==3.1.6
+joblib==1.5.3
+MarkupSafe==3.0.3
+mpmath==1.3.0
+networkx==3.2.1
+numpy==2.0.2
+openpyxl==3.1.5
+packaging==26.2
+pandas==2.3.3
+pillow==11.3.0
+pluggy==1.6.0
+# pydantic y pydantic_core se agregaron en v2.0 del framework, DESPUÉS de
+# capturar este lock file desde tu máquina — no vienen de tu pip freeze
+# real. Versiones razonables por ahora; si quieres precisión total,
+# regenera este archivo con `pip freeze` después de instalar.
+pydantic==2.13.4
+pydantic_core==2.46.4
+pyarrow==21.0.0
+Pygments==2.20.0
+pytest==8.4.2
+python-dateutil==2.9.0.post0
+pytz==2026.3.post1
+PyYAML==6.0.3
+regex==2026.1.15
+requests==2.32.5
+safetensors==0.7.0
+scikit-learn==1.6.1
+scipy==1.13.1
+sentence-transformers==5.1.2
+six==1.17.0
+SQLAlchemy==2.0.51
+sympy==1.14.0
+threadpoolctl==3.6.0
+tokenizers==0.22.2
+tomli==2.4.1
+torch==2.8.0
+tqdm==4.69.1
+transformers==4.57.6
+typing_extensions==4.16.0
+tzdata==2026.3
+urllib3==2.6.3
+xgboost==2.1.4

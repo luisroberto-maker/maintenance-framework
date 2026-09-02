@@ -1,0 +1,80 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "plc-agent"
+version = "1.8.0"
+description = "Framework multi-vertical de mantenimiento predictivo — fallas PLC y desgaste de herramienta"
+readme = "README.md"
+# NOTA: se recomienda Python 3.11 o 3.12 (ver README, sección "Instalación").
+# El mínimo se dejó en 3.9 porque el código YA fue probado y funciona ahí
+# (74 pruebas pasando) — no tiene sentido bloquear la instalación por una
+# recomendación, solo por requisitos técnicos reales. Python 3.9 llegó a
+# su fin de vida (sin parches de seguridad) el 31 de octubre de 2025; la
+# integración continua (.github/workflows/tests.yml) solo prueba 3.11 y
+# 3.12 de cara al futuro.
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [
+    { name = "Roberto Garcia" },
+    { name = "VecTech" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+    "Private :: Do Not Upload",
+]
+
+dependencies = [
+    "pandas>=2.0,<4.0",
+    "numpy>=1.24,<3.0",
+    "scikit-learn>=1.3,<2.0",
+    "scipy>=1.10,<2.0",
+    "joblib>=1.3,<2.0",
+    "openpyxl>=3.1,<4.0",
+    "sentence-transformers>=2.6,<6.0",
+    "xgboost>=2.0,<3.0",
+    "pydantic>=2.0,<3.0",
+]
+
+[project.optional-dependencies]
+# Extras opcionales — no se instalan por defecto con `pip install -e .`
+sql = ["sqlalchemy>=2.0,<3.0"]
+parquet = ["pyarrow>=14.0,<22.0"]
+dev = ["pytest>=7.4,<9.0"]
+all = ["plc-agent[sql,parquet,dev]"]
+
+[project.scripts]
+# Habilita el comando `plc-agent archivo.xlsx --client X` en vez de
+# `python orchestrator.py archivo.xlsx --client X`, una vez instalado
+# con `pip install -e .`
+plc-agent = "orchestrator:main"
+
+[tool.setuptools]
+# Layout plano (no src/): core/, agents/ y orchestrator.py ya viven en la
+# raíz del repo y así los importan las pruebas y los scripts existentes
+# (probar_modelo_real.py, probar_modelo_kaggle.py, test_smoke.py). Migrar
+# a un layout src/ más adelante es posible, pero no es necesario para que
+# el paquete sea instalable — y hacerlo ahora arriesgaría romper las 44
+# pruebas existentes sin necesidad real.
+py-modules = ["orchestrator"]
+
+[tool.setuptools.packages.find]
+include = ["core*", "agents*"]
+exclude = ["tests*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "-v --tb=short"
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+]
