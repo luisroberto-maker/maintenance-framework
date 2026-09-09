@@ -376,12 +376,12 @@ Python 3.9 llegó a su fin de vida (sin parches de seguridad) el 31 de
 octubre de 2025. Se recomienda Python 3.11 o 3.12 para instalaciones
 nuevas.
 
-**¿Por qué límites superiores en `requirements.txt`?** Ya nos pasó una vez
+**¿Por qué límites superiores en `requirements.txt`?** Sucedió una vez un error con
 con pandas 3.0: una dependencia con un cambio mayor de versión introdujo 3
-incompatibilidades distintas que tardamos varias corridas en diagnosticar
+incompatibilidades distintas.
 (ver `core/predictor.py` y `tests/test_predictor_plc.py`). Los límites
 superiores evitan que una actualización automática de una librería rompa
-el sistema sin aviso — si necesitas una versión más nueva de algo, se
+el sistema sin aviso. Si es necesario una versión más nueva de algo, se
 actualiza el límite a propósito, después de probarlo.
 
 ## 11. Problemas comunes
@@ -394,45 +394,3 @@ actualiza el límite a propósito, después de probarlo.
 | `KeyError` con columnas de features en la vertical de desgaste | El DataFrame no pasó por extracción de features | Usa `column_map={"domain": "tool_wear"}` o revisa que tenga las 133 columnas de `FEAT_COLS` |
 | Predicciones distintas entre corridas con `LegacyPLCPredictor` | Comportamiento esperado — hereda el bug conocido del `LabelEncoder` y el PCA que se reajustan en cada llamada (documentado en `core/legacy_plc_predictor.py`) | Si te afecta en producción, considera migrar a `AdaptiveFailurePredictor` |
 | No se ve NINGÚN progreso en consola al usar el framework como biblioteca | Falta llamar a `setup_logging()` — `logging` no muestra nada hasta que se configura, a diferencia de `print()` | Agrega `from core.logging_config import setup_logging; setup_logging()` al inicio de tu script |
-
-## 12. Publicar este proyecto en un repositorio git
-
-```bash
-git init
-git add .
-git commit -m "Versión inicial: framework multi-vertical v1.8"
-
-# Crea el repositorio remoto en GitHub/GitLab primero, luego:
-git remote add origin <url-de-tu-repositorio>
-git branch -M main
-git push -u origin main
-```
-
-`.gitignore` ya está configurado para excluir el entorno virtual, los
-modelos entrenados, los reportes generados y cualquier archivo de datos
-(`.xlsx`, `.csv`) — así nunca subes por accidente datos de un cliente o
-archivos pesados innecesarios al repositorio.
-
-**Nota sobre `VERSION.txt` y `CHECKSUMS.txt`:** estos archivos se crearon
-como solución temporal mientras el proyecto se compartía como `.zip`, para
-poder verificar que dos copias del código eran idénticas sin git. Una vez
-que el proyecto vive en un repositorio, **git ya resuelve ese problema
-mejor** — `git log`, `git diff` y los números de commit identifican
-exactamente qué versión tienes, sin necesidad de checksums manuales.
-Puedes dejar de generar `CHECKSUMS.txt` en adelante; `VERSION.txt` puedes
-conservarlo como un changelog legible si te resulta útil, o migrarlo a un
-`CHANGELOG.md` más estándar.
-
-**Sobre la licencia:** el proyecto es propietario de VecTech — ver el
-archivo `LICENSE`. Nadie fuera del equipo puede usar, copiar o modificar
-el código sin permiso explícito. `pyproject.toml` referencia ese archivo
-directamente (`license = { file = "LICENSE" }`), así que queda embebido
-en los metadatos del paquete cuando alguien lo instala.
-
-Un detalle a revisar antes de compartir el repositorio más ampliamente:
-`core/legacy_plc_predictor.py` replica la lógica de tu repositorio previo
-(`luisroberto-maker/PLC-failure-prediction-pipeline`, el que usa tu
-compañero) — si ese otro repositorio tiene una licencia pública distinta
-declarada en GitHub, vale la pena homologarlas o dejar documentada la
-diferencia, para que no haya ambigüedad sobre bajo qué términos circula
-esa parte específica del código.
