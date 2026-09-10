@@ -284,14 +284,14 @@ respaldan esa predicción específica.
 
 ---
 
-## 10. Limitaciones conocidas — a propósito
+## 10. Limitaciones
 
-Estas **no son bugs pendientes** — son comportamientos documentados y
-deliberados. No los "arregles" sin entender primero por qué existen así:
+Estos puntos son comportamientos documentados y
+deliberados. A continuación se describe por qué existen así:
 
 - **`LegacyPLCPredictor` reajusta el `LabelEncoder` y el PCA en cada
   llamada a `predict_all()`.** Es el comportamiento exacto del
-  repositorio que envuelve. Si esto te afecta en producción, la solución
+  repositorio que envuelve. Si esto afecta en producción, la solución
   es migrar a `AdaptiveFailurePredictor`, no parchear el legado.
 - **La vertical de desgaste no tiene `update()` incremental** — solo la
   vertical PLC lo tiene por ahora.
