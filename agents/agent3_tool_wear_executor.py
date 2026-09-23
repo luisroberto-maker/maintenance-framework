@@ -57,9 +57,11 @@ class ToolWearExecutorAgent:
         t0 = time.time()
 
         if not plan.can_train:
-            raise ValueError(
+            from core.errors import InsufficientDataError
+            raise InsufficientDataError(
                 "El Agente 2 determinó que no se puede entrenar con estos "
-                "datos. Revisa plan.rationale para el motivo."
+                "datos. Revisa plan.rationale para el motivo.",
+                details={"rationale": plan.rationale},
             )
 
         self.predictor = ToolWearPredictor(vb_threshold=plan.vb_threshold)
@@ -103,10 +105,12 @@ class ToolWearExecutorAgent:
                 Path(self.cfg.model_dir) / f"tool_wear_predictor_{client_id}.pkl"
             )
             if not Path(model_path).exists():
-                raise FileNotFoundError(
+                from core.errors import ModelNotFoundError
+                raise ModelNotFoundError(
                     f"No se encontró un modelo entrenado en {model_path}. "
                     f"Entrena primero con system.run(...), o pasa artifacts_dir "
-                    f"si tu modelo viene de Kaggle."
+                    f"si tu modelo viene de Kaggle.",
+                    details={"model_path": model_path, "client_id": client_id},
                 )
             logger.info(f"Cargando modelo entrenado desde {model_path}...")
             self.predictor = ToolWearPredictor.load(model_path)

@@ -40,6 +40,11 @@ from agents.agent1_tool_wear_loader import ToolWearDataLoaderAgent
 from agents.agent2_tool_wear_planner import ToolWearStrategyPlanner
 from agents.agent3_tool_wear_executor import ToolWearExecutorAgent
 from core.tool_wear_predictor import ToolWearPredictor
+from core.errors import (
+    ErrorCode, Status, PLCAgentError,
+    InsufficientDataError, UnknownSchemaError, ModelNotFoundError,
+    UnknownDomainError, error_to_response, success_response,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -340,6 +345,7 @@ class MultiVerticalAgentSystem:
         self.last_domain: Optional[Domain] = None
         self.last_predictor: Optional[ToolWearPredictor] = None
         self.last_result_df = None
+        self.last_schema = None  # InferredSchema de la última operación — usado por run_safe()/predict_only_safe()
 
     def run(
         self,
@@ -359,6 +365,7 @@ class MultiVerticalAgentSystem:
             report = self.plc_system.run(source, client_id=client_id,
                                          column_map=column_map, verbose=verbose)
             self.last_result_df = self.plc_system.get_ranking()
+            self.last_schema = self.plc_system.last_schema
             return report
 
         if domain == Domain.TOOL_WEAR:
@@ -372,12 +379,74 @@ class MultiVerticalAgentSystem:
         report = self.plc_system.run(source, client_id=client_id,
                                      column_map=column_map, verbose=verbose)
         self.last_result_df = self.plc_system.get_ranking()
+        self.last_schema = self.plc_system.last_schema
         return report
+
+    def run_safe(
+        self,
+        source,
+        client_id: str = "default",
+        column_map: Optional[dict] = None,
+        force_domain: Optional[str] = None,
+        verbose: bool = False,
+    ) -> dict:
+        """
+        Envoltorio de run() pensado para consumirse desde una interfaz
+        externa (como una interfaz web): NUNCA lanza una excepción y
+        SIEMPRE devuelve un diccionario serializable a JSON con la
+        forma {"status": ..., "code": ..., "message": ..., ...} — sin
+        que quien lo llama necesite conocer ni capturar ningún tipo de
+        excepción de Python.
+
+        No reemplaza a run() — run() sigue funcionando exactamente igual
+        que antes (ver ARCHITECTURE.md, sección 6, que sigue vigente sin
+        cambios). Usa run() si prefieres manejar tú mismo los casos de
+        error; usa run_safe() si prefieres un contrato uniforme.
+
+        Returns
+        -------
+        dict con status "SUCCESS" | "WARNING" | "ERROR":
+          - SUCCESS/WARNING: incluye "report_path" y "warnings" (lista,
+            vacía en SUCCESS).
+          - ERROR: incluye "code" (ver core.errors.ErrorCode) y
+            "details" con contexto adicional.
+        """
+        try:
+            report_path = self.run(
+                source, client_id=client_id, column_map=column_map,
+                force_domain=force_domain, verbose=verbose,
+            )
+        except Exception as exc:
+            return error_to_response(exc)
+
+        if Path(report_path).name.startswith("error_"):
+            # run() no lanza excepción en este caso por compatibilidad
+            # con su contrato ya documentado — aquí lo traducimos igual
+            # al mismo formato estructurado que todo lo demás.
+            advertencias = list(self.last_schema.warnings) if self.last_schema else []
+            if self.last_schema is not None and not self.last_schema.is_valid:
+                error = UnknownSchemaError(
+                    "No se pudo interpretar el schema de los datos.",
+                    details={"warnings": advertencias},
+                )
+            else:
+                error = InsufficientDataError(
+                    "No hay suficientes datos para entrenar un modelo.",
+                    details={"warnings": advertencias},
+                )
+            return error.to_dict()
+
+        advertencias = list(self.last_schema.warnings) if self.last_schema else []
+        return success_response(
+            report_path, warnings=advertencias,
+            domain=self.last_domain.value if self.last_domain else None,
+        )
 
     def _run_tool_wear(self, source, client_id: str,
                        column_map: Optional[dict], verbose: bool) -> str:
         logger.info("\n[1/4] Agente 1 (desgaste) — cargando y validando señales...")
         df, schema = self.tool_wear_loader.analyze(source, column_map=column_map)
+        self.last_schema = schema
         if verbose:
             self.tool_wear_loader.print_schema_report(schema)
 
@@ -491,16 +560,56 @@ class MultiVerticalAgentSystem:
                 return self._predict_only_plc_legacy(source, client_id, model_path, column_map, verbose)
             return self._predict_only_plc(source, client_id, model_path, column_map, verbose)
         else:
-            raise ValueError(
+            raise UnknownDomainError(
                 "No se pudo determinar el dominio automáticamente. "
                 "Especifica domain='plc_failure' o domain='tool_wear' explícitamente."
             )
+
+    def predict_only_safe(
+        self,
+        source,
+        client_id: str = "default",
+        domain: Optional[str] = None,
+        model_path: Optional[str] = None,
+        artifacts_dir: Optional[str] = None,
+        legacy: bool = False,
+        verbose: bool = False,
+    ) -> dict:
+        """
+        Envoltorio de predict_only() con el mismo espíritu que
+        run_safe(): nunca lanza una excepción, siempre devuelve un
+        diccionario serializable a JSON con status/code/message. Ver
+        run_safe() para el formato exacto de la respuesta.
+        """
+        try:
+            report_path = self.predict_only(
+                source, client_id=client_id, domain=domain,
+                model_path=model_path, artifacts_dir=artifacts_dir,
+                legacy=legacy, verbose=verbose,
+            )
+        except Exception as exc:
+            return error_to_response(exc)
+
+        if Path(report_path).name.startswith("error_"):
+            advertencias = list(self.last_schema.warnings) if self.last_schema else []
+            error = UnknownSchemaError(
+                "No se pudo interpretar el schema de los datos nuevos.",
+                details={"warnings": advertencias},
+            )
+            return error.to_dict()
+
+        advertencias = list(self.last_schema.warnings) if self.last_schema else []
+        return success_response(
+            report_path, warnings=advertencias,
+            domain=self.last_domain.value if self.last_domain else None,
+        )
 
     def _predict_only_tool_wear(
         self, source, client_id, model_path, artifacts_dir, column_map, verbose
     ) -> str:
         logger.info("[1/3] Agente 1 (desgaste) — cargando y validando datos nuevos...")
         df, schema = self.tool_wear_loader.analyze(source, column_map=column_map)
+        self.last_schema = schema
         if verbose:
             self.tool_wear_loader.print_schema_report(schema)
         if not schema.is_valid:
@@ -531,15 +640,17 @@ class MultiVerticalAgentSystem:
 
         model_path = model_path or str(Path(self.cfg.model_dir) / f"predictor_{client_id}.pkl")
         if not Path(model_path).exists():
-            raise FileNotFoundError(
+            raise ModelNotFoundError(
                 f"No se encontró un modelo entrenado en {model_path}. "
-                f"Entrena primero con system.run(...)."
+                f"Entrena primero con system.run(...).",
+                details={"model_path": model_path, "client_id": client_id},
             )
         logger.info(f"[1/3] Cargando modelo entrenado desde {model_path}...")
         predictor = AdaptiveFailurePredictor.load(model_path)
 
         logger.info("[2/3] Agente 1 — cargando y validando datos nuevos...")
         df, schema = self.plc_system.agent1.analyze(source, column_map=column_map)
+        self.last_schema = schema
         if verbose:
             self.plc_system.agent1.print_schema_report(schema)
         if not schema.is_valid:
@@ -576,10 +687,11 @@ class MultiVerticalAgentSystem:
 
         model_path = model_path or str(Path(self.cfg.model_dir) / f"modelo_legacy_{client_id}.pkl")
         if not Path(model_path).exists():
-            raise FileNotFoundError(
+            raise ModelNotFoundError(
                 f"No se encontró un modelo en {model_path}. Este modo espera el "
                 f".pkl entrenado con luisroberto-maker/PLC-failure-prediction-pipeline "
-                f"(un estimador sklearn, no un objeto AdaptiveFailurePredictor)."
+                f"(un estimador sklearn, no un objeto AdaptiveFailurePredictor).",
+                details={"model_path": model_path, "client_id": client_id, "legacy": True},
             )
         logger.info(f"[1/3] Cargando modelo legado desde {model_path}...")
         predictor = LegacyPLCPredictor.from_pretrained(
@@ -592,6 +704,7 @@ class MultiVerticalAgentSystem:
 
         logger.info("[2/3] Agente 1 — cargando y validando datos nuevos...")
         df, schema = self.plc_system.agent1.analyze(source, column_map=column_map)
+        self.last_schema = schema
         if verbose:
             self.plc_system.agent1.print_schema_report(schema)
         if not schema.is_valid:
