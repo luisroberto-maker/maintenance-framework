@@ -163,6 +163,20 @@ class DataAnalyzerAgent:
         # 1. Inferir / aplicar mapeo de columnas
         self._infer_columns(df, schema, column_map or {})
 
+        # 1b. Verificación temprana: sin estas dos columnas, _normalize()
+        # no puede continuar (necesita construir START TIME y DURACION_MIN).
+        # Antes esta verificación pasaba DESPUÉS de _normalize(), lo cual
+        # provocaba un KeyError sin control cuando START TIME nunca se
+        # identificó — ver tests/test_errors.py para la prueba de
+        # regresión de este caso.
+        if schema.col_component is None or schema.col_timestamp_start is None:
+            schema.is_valid = False
+            schema.warnings.append(
+                "No se pudo identificar columna de componente o timestamp de inicio. "
+                "Usa column_map para especificarlas manualmente."
+            )
+            return df, schema
+
         # 2. Normalizar el DataFrame al schema canónico
         df = self._normalize(df, schema)
 
@@ -171,13 +185,6 @@ class DataAnalyzerAgent:
 
         # 4. Reporte de columnas no reconocidas
         self._warn_unrecognized_columns(df, schema)
-
-        if schema.col_component is None or schema.col_timestamp_start is None:
-            schema.is_valid = False
-            schema.warnings.append(
-                "No se pudo identificar columna de componente o timestamp de inicio. "
-                "Usa column_map para especificarlas manualmente."
-            )
 
         return df, schema
 

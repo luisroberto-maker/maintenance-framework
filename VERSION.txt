@@ -1,3 +1,25 @@
+v2.7 — 2026-09-22
+
+Nuevo: ERRORES Y ESTADOS ESTRUCTURADOS para interfaces externas:
+- core/errors.py — Status (SUCCESS/WARNING/ERROR), ErrorCode
+  (INSUFFICIENT_DATA, UNKNOWN_SCHEMA, MODEL_NOT_FOUND, VALIDATION_ERROR,
+  UNKNOWN_DOMAIN, INTERNAL_ERROR), jerarquia PLCAgentError con
+  compatibilidad hacia atras (ModelNotFoundError tambien es
+  FileNotFoundError, UnknownDomainError tambien es ValueError), y
+  error_to_response() que convierte CUALQUIER excepcion (propia, de
+  pydantic, o no anticipada) al mismo formato de diccionario.
+- orchestrator.py: nuevos metodos run_safe() y predict_only_safe() -
+  nunca lanzan una excepcion, siempre devuelven un dict serializable a
+  JSON. Puramente aditivos: run()/predict_only() siguen funcionando
+  exactamente igual que antes (contrato de ARCHITECTURE.md sin romper).
+- Fix de robustez: agent1_analyzer.py intentaba usar la columna START
+  TIME antes de verificar si se habia identificado, causando un
+  KeyError sin control con datos muy mal formados. Ahora la validacion
+  pasa antes de intentar usar la columna.
+- 13 pruebas nuevas en tests/test_errors.py.
+- ARCHITECTURE.md y README.md actualizados con el vocabulario de
+  errores y ejemplos de uso de las variantes _safe.
+
 v2.6 — 2026-08-12
 
 Nuevo: LICENSE — VecTech, propietario, todos los derechos reservados.

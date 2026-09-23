@@ -162,6 +162,35 @@ Esta ruta replica el comportamiento exacto del repositorio original —
 mismo `MAPEO_FALLAS`, mismas features, mismo encoder — sin ninguna mejora
 del framework aplicada encima.
 
+### 4.4 Si estás construyendo una interfaz externa (web, API, etc.)
+
+Usa `run_safe()` / `predict_only_safe()` en vez de `run()` /
+`predict_only()` — nunca lanzan una excepción, siempre devuelven un
+diccionario con `status`/`code`/`message`, listo para convertir a JSON
+sin que tu interfaz necesite conocer tipos de excepción de Python:
+
+```python
+resultado = system.predict_only_safe(
+    source="datos_nuevos.xlsx",
+    client_id="cliente_a",
+    domain="plc_failure",
+    model_path="output/models/predictor_cliente_a.pkl",
+)
+
+if resultado["status"] == "ERROR":
+    if resultado["code"] == "MODEL_NOT_FOUND":
+        print("Este cliente todavía no tiene un modelo entrenado.")
+    else:
+        print(f"Error: {resultado['message']}")
+else:
+    print(f"Reporte listo: {resultado['report_path']}")
+    for advertencia in resultado["warnings"]:
+        print(f"⚠ {advertencia}")
+```
+
+Ver `ARCHITECTURE.md`, sección 6, para el vocabulario completo de
+códigos de error (`ErrorCode`) y el formato exacto de la respuesta.
+
 ---
 
 ## 5. Estructura del proyecto
@@ -178,11 +207,12 @@ plc_agent/
 ├── orchestrator.py                    ← Punto de entrada único (MultiVerticalAgentSystem)
 ├── test_smoke.py                      ← Prueba end-to-end con datos sintéticos
 ├── requirements.txt / requirements-lock.txt
-├── tests/                             ← Suite de 44 pruebas automatizadas (pytest)
+├── tests/                             ← Suite de pruebas automatizadas (pytest)
 │
 ├── core/
-│   ├── config.py                      ← AgentConfig y dataclasses compartidas
+│   ├── config.py                      ← AgentConfig (validado con Pydantic) y dataclasses compartidas
 │   ├── base_predictor.py              ← Interfaz BasePredictor + ReportSchema
+│   ├── errors.py                      ← Status/ErrorCode/PLCAgentError — errores estructurados para interfaces externas
 │   ├── predictor.py                   ← AdaptiveFailurePredictor (vertical PLC)
 │   ├── tool_wear_predictor.py         ← ToolWearPredictor (vertical desgaste, PHM 2010)
 │   └── legacy_plc_predictor.py        ← LegacyPLCPredictor (réplica exacta del repo original)
@@ -311,7 +341,7 @@ nada hasta que se configura explícitamente).
 
 ## 9. Pruebas automatizadas
 
-El proyecto incluye una suite de 44 pruebas con `pytest` que cubre las tres
+El proyecto incluye una suite de 87 pruebas con `pytest` que cubre las tres
 verticales/predictores y, en particular, **pruebas de regresión explícitas
 para cada bug real encontrado durante el desarrollo** — para que no vuelvan
 a aparecer silenciosamente en una actualización futura.
@@ -321,7 +351,7 @@ pip install -e ".[dev]"   # o pip install -r requirements.txt
 python -m pytest
 ```
 
-Debe terminar con algo como `44 passed`. Para correr solo un archivo o una
+Debe terminar con algo como `87 passed`. Para correr solo un archivo o una
 prueba específica:
 
 ```bash
@@ -349,6 +379,8 @@ acordarte de correr `pytest` manualmente antes de fusionar un cambio.
 | `tests/test_predictor_tool_wear.py` | `ToolWearPredictor` — incluye el bug de RUL absurda y carga de artefactos Kaggle |
 | `tests/test_predictor_legacy.py` | `LegacyPLCPredictor` — incluye el bug de `IndexError` por clase única |
 | `tests/test_agent2_tool_wear_planner.py` | `ToolWearStrategyPlanner` — decisiones de estrategia (LOEO, ensamble) |
+| `tests/test_config_validation.py` | Validación de `AgentConfig` con Pydantic — valores inválidos fallan al construir |
+| `tests/test_errors.py` | Errores estructurados (`core/errors.py`) y `run_safe()`/`predict_only_safe()` — nunca lanzan, siempre devuelven un dict |
 | `tests/test_orchestrator.py` | `MultiVerticalAgentSystem` — flujos `run()` y `predict_only()` completos |
 
 Si modificas el código y una prueba empieza a fallar, es una señal real —
@@ -376,12 +408,12 @@ Python 3.9 llegó a su fin de vida (sin parches de seguridad) el 31 de
 octubre de 2025. Se recomienda Python 3.11 o 3.12 para instalaciones
 nuevas.
 
-**¿Por qué límites superiores en `requirements.txt`?** Sucedió una vez un error con
+**¿Por qué límites superiores en `requirements.txt`?** Ya nos pasó una vez
 con pandas 3.0: una dependencia con un cambio mayor de versión introdujo 3
-incompatibilidades distintas.
+incompatibilidades distintas que tardamos varias corridas en diagnosticar
 (ver `core/predictor.py` y `tests/test_predictor_plc.py`). Los límites
 superiores evitan que una actualización automática de una librería rompa
-el sistema sin aviso. Si es necesario una versión más nueva de algo, se
+el sistema sin aviso — si necesitas una versión más nueva de algo, se
 actualiza el límite a propósito, después de probarlo.
 
 ## 11. Problemas comunes
@@ -394,3 +426,45 @@ actualiza el límite a propósito, después de probarlo.
 | `KeyError` con columnas de features en la vertical de desgaste | El DataFrame no pasó por extracción de features | Usa `column_map={"domain": "tool_wear"}` o revisa que tenga las 133 columnas de `FEAT_COLS` |
 | Predicciones distintas entre corridas con `LegacyPLCPredictor` | Comportamiento esperado — hereda el bug conocido del `LabelEncoder` y el PCA que se reajustan en cada llamada (documentado en `core/legacy_plc_predictor.py`) | Si te afecta en producción, considera migrar a `AdaptiveFailurePredictor` |
 | No se ve NINGÚN progreso en consola al usar el framework como biblioteca | Falta llamar a `setup_logging()` — `logging` no muestra nada hasta que se configura, a diferencia de `print()` | Agrega `from core.logging_config import setup_logging; setup_logging()` al inicio de tu script |
+
+## 12. Publicar este proyecto en un repositorio git
+
+```bash
+git init
+git add .
+git commit -m "Versión inicial: framework multi-vertical v1.8"
+
+# Crea el repositorio remoto en GitHub/GitLab primero, luego:
+git remote add origin <url-de-tu-repositorio>
+git branch -M main
+git push -u origin main
+```
+
+`.gitignore` ya está configurado para excluir el entorno virtual, los
+modelos entrenados, los reportes generados y cualquier archivo de datos
+(`.xlsx`, `.csv`) — así nunca subes por accidente datos de un cliente o
+archivos pesados innecesarios al repositorio.
+
+**Nota sobre `VERSION.txt` y `CHECKSUMS.txt`:** estos archivos se crearon
+como solución temporal mientras el proyecto se compartía como `.zip`, para
+poder verificar que dos copias del código eran idénticas sin git. Una vez
+que el proyecto vive en un repositorio, **git ya resuelve ese problema
+mejor** — `git log`, `git diff` y los números de commit identifican
+exactamente qué versión tienes, sin necesidad de checksums manuales.
+Puedes dejar de generar `CHECKSUMS.txt` en adelante; `VERSION.txt` puedes
+conservarlo como un changelog legible si te resulta útil, o migrarlo a un
+`CHANGELOG.md` más estándar.
+
+**Sobre la licencia:** el proyecto es propietario de VecTech — ver el
+archivo `LICENSE`. Nadie fuera del equipo puede usar, copiar o modificar
+el código sin permiso explícito. `pyproject.toml` referencia ese archivo
+directamente (`license = { file = "LICENSE" }`), así que queda embebido
+en los metadatos del paquete cuando alguien lo instala.
+
+Un detalle a revisar antes de compartir el repositorio más ampliamente:
+`core/legacy_plc_predictor.py` replica la lógica de tu repositorio previo
+(`luisroberto-maker/PLC-failure-prediction-pipeline`, el que usa tu
+compañero) — si ese otro repositorio tiene una licencia pública distinta
+declarada en GitHub, vale la pena homologarlas o dejar documentada la
+diferencia, para que no haya ambigüedad sobre bajo qué términos circula
+esa parte específica del código.

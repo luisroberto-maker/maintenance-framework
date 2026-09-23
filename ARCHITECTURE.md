@@ -222,6 +222,71 @@ system.last_domain -> Domain
 - Las clases internas (`AdaptiveFailurePredictor`, `ToolWearPredictor`, agentes individuales) — son detalles de implementación. Solo `BasePredictor` (la interfaz) es estable.
 - El formato del HTML de reporte — está pensado para verse en navegador, no para parsearse programáticamente. Si necesitas los datos, usa `get_ranking()`.
 
+### Variantes "safe" — recomendadas para una interfaz externa
+
+`run()` y `predict_only()` pueden lanzar excepciones (documentadas abajo)
+cuando algo no puede completarse — eso está bien si tú mismo llamas al
+framework y quieres manejar cada caso a tu manera. Pero si estás
+construyendo una interfaz que va a mostrarle el resultado a un usuario
+final (como una interfaz web), normalmente **no quieres tener que conocer
+tipos de excepción de Python** para eso. Para ese caso existen dos
+variantes que nunca lanzan y siempre devuelven un diccionario
+serializable a JSON:
+
+```python
+system.run_safe(source, client_id: str, column_map: dict = None,
+                force_domain: str = None, verbose: bool = False) -> dict
+
+system.predict_only_safe(source, client_id: str, domain: str = None,
+                         model_path: str = None, artifacts_dir: str = None,
+                         legacy: bool = False, verbose: bool = False) -> dict
+```
+
+Formato de la respuesta, siempre el mismo shape (ver `core/errors.py`):
+
+```python
+# Éxito, sin nada que advertir:
+{"status": "SUCCESS", "code": None, "message": "Completado correctamente.",
+ "report_path": "output/reports/reporte_cliente_x.html", "warnings": []}
+
+# Éxito, pero con algo que vale la pena mostrarle al usuario:
+{"status": "WARNING", "code": None, "message": "Completado con advertencias.",
+ "report_path": "...", "warnings": ["Solo 12 pasadas disponibles — ..."]}
+
+# No se pudo completar la operación:
+{"status": "ERROR", "code": "MODEL_NOT_FOUND",
+ "message": "No se encontró un modelo entrenado en output/models/predictor_x.pkl. ...",
+ "details": {"model_path": "...", "client_id": "..."}}
+```
+
+`code` es uno de `ErrorCode` (`core/errors.py`) — estable entre
+versiones, así que una interfaz externa puede tomar decisiones distintas
+según el código (por ejemplo, `INSUFFICIENT_DATA` podría mostrar "sube
+más datos históricos", mientras que `MODEL_NOT_FOUND` podría mostrar un
+botón para entrenar) sin tener que interpretar el texto del mensaje.
+
+**`run()`/`predict_only()` siguen funcionando exactamente igual que
+antes** — las variantes `_safe` son aditivas, no un reemplazo. Ambos
+caminos son parte del contrato estable.
+
+### Excepciones que puede lanzar `run()`/`predict_only()`
+
+Si prefieres manejar tú mismo los errores en vez de usar las variantes
+`_safe`, estas son las excepciones específicas del dominio (todas en
+`core/errors.py`, todas heredan de `PLCAgentError`):
+
+| Excepción | Cuándo | También es instancia de (compatibilidad) |
+|---|---|---|
+| `InsufficientDataError` | No hay suficientes eventos/pasadas para entrenar | — |
+| `UnknownSchemaError` | No se pudieron identificar las columnas necesarias, ni con `column_map` | — |
+| `ModelNotFoundError` | `predict_only()` no encontró el `.pkl` esperado | `FileNotFoundError` |
+| `UnknownDomainError` | No se pudo determinar el dominio y no se especificó explícitamente | `ValueError` |
+| `ConfigValidationError` | Reservada para validaciones propias del framework (no la lanza `AgentConfig` — eso usa `pydantic.ValidationError` directamente) | — |
+
+Para convertir cualquiera de estas (o cualquier otra excepción, incluida
+`pydantic.ValidationError`) al mismo formato de diccionario que usan las
+variantes `_safe`, usa `core.errors.error_to_response(excepcion)`.
+
 ---
 
 ## 7. Dos modos de operación
@@ -284,14 +349,14 @@ respaldan esa predicción específica.
 
 ---
 
-## 10. Limitaciones
+## 10. Limitaciones conocidas — a propósito
 
-Estos puntos son comportamientos documentados y
-deliberados. A continuación se describe por qué existen así:
+Estas **no son bugs pendientes** — son comportamientos documentados y
+deliberados. No los "arregles" sin entender primero por qué existen así:
 
 - **`LegacyPLCPredictor` reajusta el `LabelEncoder` y el PCA en cada
   llamada a `predict_all()`.** Es el comportamiento exacto del
-  repositorio que envuelve. Si esto afecta en producción, la solución
+  repositorio que envuelve. Si esto te afecta en producción, la solución
   es migrar a `AdaptiveFailurePredictor`, no parchear el legado.
 - **La vertical de desgaste no tiene `update()` incremental** — solo la
   vertical PLC lo tiene por ahora.
